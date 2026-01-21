@@ -6,6 +6,8 @@ import mongoose from 'mongoose';
 import productRouter from './routes/productRouter.js';
 import cartRouter from './routes/cartRouter.js';
 import viewsRouter from './routes/viewsRouter.js';
+import sessionsRouter from './routes/sessionsRouter.js'; 
+
 import __dirname from './utils/constantsUtil.js';
 import websocket from './websocket.js';
 
@@ -18,11 +20,9 @@ const app = express();
 const uri = 'mongodb://127.0.0.1:27017/entrega-final';
 mongoose.connect(uri);
 
-
 app.engine('handlebars', handlebars.engine());
 app.set('views', __dirname + '/../views');
 app.set('view engine', 'handlebars');
-
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -31,6 +31,8 @@ app.use(cookieParser());
 
 initializePassport();
 app.use(passport.initialize());
+
+app.use('/api/sessions', sessionsRouter); 
 
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
