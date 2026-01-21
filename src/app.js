@@ -9,22 +9,29 @@ import viewsRouter from './routes/viewsRouter.js';
 import __dirname from './utils/constantsUtil.js';
 import websocket from './websocket.js';
 
+import initializePassport from './config/passportConfig.js';
+import passport from 'passport';
+import cookieParser from 'cookie-parser';
+
 const app = express();
 
 const uri = 'mongodb://127.0.0.1:27017/entrega-final';
 mongoose.connect(uri);
 
-//Handlebars Config
+
 app.engine('handlebars', handlebars.engine());
 app.set('views', __dirname + '/../views');
 app.set('view engine', 'handlebars');
 
-//Middlewares
+
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(express.static('public'));
+app.use(cookieParser());
 
-//Routers
+initializePassport();
+app.use(passport.initialize());
+
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
 app.use('/', viewsRouter);
