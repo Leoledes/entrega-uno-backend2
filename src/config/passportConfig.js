@@ -9,7 +9,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const LocalStrategy = local.Strategy;
-const JWT_SECRET = process.env.JWT_SECRET || 'coderSecretKey123';
+
+export const JWT_SECRET = process.env.JWT_SECRET || 'coderSecretKey123';
 
 const initializePassport = () => {
 
@@ -29,7 +30,8 @@ const initializePassport = () => {
                     email: username,
                     age,
                     password: createHash(password),
-                    cart: newCart._id
+                    cart: newCart._id,
+                    role: 'user'
                 };
 
                 const result = await userModel.create(newUser);
@@ -46,7 +48,7 @@ const initializePassport = () => {
             try {
                 const user = await userModel.findOne({ email: username });
                 if (!user) return done(null, false);
-                
+
                 if (!isValidPassword(password, user.password)) return done(null, false);
                 
                 return done(null, user);
@@ -64,6 +66,8 @@ const initializePassport = () => {
     }, async (jwt_payload, done) => {
         try {
             const user = await userModel.findById(jwt_payload.id).populate('cart');
+            
+            if (!user) return done(null, false);
             return done(null, user);
         } catch (error) {
             return done(error, false);
