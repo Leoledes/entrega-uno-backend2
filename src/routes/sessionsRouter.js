@@ -1,43 +1,19 @@
 import { Router } from 'express';
-import userModel from '../dao/models/userModel.js';
-import cartModel from '../dao/models/cartModel.js'; 
-import { createHash, isValidPassword } from '../utils.js';
-import jwt from 'jsonwebtoken';
 import passport from 'passport';
+import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/passportConfig.js';
+import { createHash, isValidPassword } from '../utils/hashPassword.js';
 
 const router = Router();
 
-router.post('/register', async (req, res) => {
-    const { first_name, last_name, email, age, password } = req.body;
-    try {
-        const exists = await userModel.findOne({ email });
-        if (exists) return res.status(400).send({ error: "User already exists" });
-
-        const newCart = await cartModel.create({});
-
-        const user = await userModel.create({
-            first_name, last_name, email, age,
-            password: createHash(password),
-            cart: newCart._id,
-            role: 'user'
-        });
-
-        res.send({ status: "success", message: "User registered" });
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+router.post('/register', passport.authenticate('register', { session: false, failureRedirect: '/failregister' }), async (req, res) => {
+    res.send({ status: "success", message: "User registered" });
 });
 
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await userModel.findOne({ email });
+router.post('/login', passport.authenticate('login', { session: false, failureRedirect: '/faillogin' }), async (req, res) => {
+    if (!req.user) return res.status(400).send({ status: "error", error: "Invalid credentials" });
 
-    if (!user || !isValidPassword(user, password)) {
-        return res.status(401).send({ error: "Invalid credentials" });
-    }
-
-    const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: req.user._id, email: req.user.email, role: req.user.role }, JWT_SECRET, { expiresIn: '24h' });
 
     res.cookie('coderCookieToken', token, { httpOnly: true })
        .send({ status: "success", message: "Logged in" });
