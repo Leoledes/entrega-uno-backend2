@@ -20,7 +20,7 @@ dotenv.config();
 
 const app = express();
 
-const uri = process.env.MONGO_URL;
+const uri = process.env.MONGO_URI;
 mongoose.connect(uri)
     .then(() => console.log("Conectado con éxito a MongoDB Atlas"))
     .catch(error => console.error("Error al conectar a la base de datos:", error));
