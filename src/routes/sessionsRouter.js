@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import userModel from '../dao/models/userModel.js';
 import { createHash, isValidPassword } from '../utils/hashPassword.js';
 import jwt from 'jsonwebtoken';
 import passport from '../config/passportConfig.js';
 import config from '../config/envConfig.js';
 import { createUserDTO } from '../dto/userDTO.js';
+import userRepository from '../repositories/userRepository.js';
 
 const router = Router();
 
@@ -19,21 +19,20 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
+        const emailInUse = await userRepository.emailExists(email);
+        if (emailInUse) {
             return res.status(400).json({ 
                 status: 'error', 
                 message: 'El email ya está registrado' 
             });
         }
 
-        const newUser = await userModel.create({
+        const newUser = await userRepository.create({
             first_name,
             last_name,
             email,
             age,
             password: createHash(password),
-            cart: null,
             role: 'user'
         });
 
@@ -62,7 +61,7 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        const user = await userModel.findOne({ email });
+        const user = await userRepository.getUserByEmail(email);
         if (!user) {
             return res.status(401).json({ 
                 status: 'error', 
