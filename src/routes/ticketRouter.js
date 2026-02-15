@@ -5,6 +5,7 @@ import { authorize } from '../middlewares/roleMiddleware.js';
 import { ROLES } from '../config/roles.js';
 
 const router = Router();
+
 router.get('/',
     isAuthenticated,
     async (req, res) => {
@@ -30,6 +31,7 @@ router.get('/:tid',
     async (req, res) => {
         try {
             const ticket = await purchaseService.getTicketById(req.params.tid);
+
             if (req.user.role !== ROLES.ADMIN && ticket.purchaser !== req.user.email) {
                 return res.status(403).json({
                     status: 'error',
@@ -55,7 +57,6 @@ router.get('/code/:code',
     async (req, res) => {
         try {
             const ticket = await purchaseService.getTicketByCode(req.params.code);
-
             if (req.user.role !== ROLES.ADMIN && ticket.purchaser !== req.user.email) {
                 return res.status(403).json({
                     status: 'error',
