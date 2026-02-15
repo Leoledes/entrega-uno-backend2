@@ -1,108 +1,54 @@
-import { Router } from 'express';
-import purchaseService from '../services/purchaseService.js';
-import { isAuthenticated } from '../middlewares/authMiddleware.js';
-import { authorize } from '../middlewares/roleMiddleware.js';
-import { ROLES } from '../config/roles.js';
+import dotenv from 'dotenv';
 
-const router = Router();
-router.get('/',
-    isAuthenticated,
-    async (req, res) => {
-        try {
-            const tickets = await purchaseService.getUserTickets(req.user.email);
+dotenv.config();
 
-            res.json({
-                status: 'success',
-                tickets,
-                count: tickets.length
-            });
-        } catch (error) {
-            res.status(500).json({
-                status: 'error',
-                message: error.message
-            });
-        }
-    }
-);
+import express from 'express';
+import handlebars from 'express-handlebars';
+import { Server } from 'socket.io';
+import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
+import passport from 'passport';
 
-router.get('/:tid',
-    isAuthenticated,
-    async (req, res) => {
-        try {
-            const ticket = await purchaseService.getTicketById(req.params.tid);
-            if (req.user.role !== ROLES.ADMIN && ticket.purchaser !== req.user.email) {
-                return res.status(403).json({
-                    status: 'error',
-                    message: 'No tienes permisos para ver este ticket'
-                });
-            }
+import __dirname from './utils/constantsUtil.js';
+import websocket from './websocket.js';
+import config from './config/envConfig.js';
+import initializePassport from './config/passportConfig.js';
 
-            res.json({
-                status: 'success',
-                ticket
-            });
-        } catch (error) {
-            res.status(404).json({
-                status: 'error',
-                message: error.message
-            });
-        }
-    }
-);
+import productRouter from './routes/productRouter.js';
+import cartRouter from './routes/cartRouter.js';
+import viewsRouter from './routes/viewsRouter.js';
+import sessionsRouter from './routes/sessionsRouter.js';
+import ticketRouter from './routes/ticketRouter.js';
 
-router.get('/code/:code',
-    isAuthenticated,
-    async (req, res) => {
-        try {
-            const ticket = await purchaseService.getTicketByCode(req.params.code);
+const app = express();
 
-            if (req.user.role !== ROLES.ADMIN && ticket.purchaser !== req.user.email) {
-                return res.status(403).json({
-                    status: 'error',
-                    message: 'No tienes permisos para ver este ticket'
-                });
-            }
+mongoose.connect(config.mongodb.uri)
+    .then(() => console.log("✅ Conectado con éxito a MongoDB Atlas"))
+    .catch(error => console.error("❌ Error al conectar a la base de datos:", error));
 
-            res.json({
-                status: 'success',
-                ticket
-            });
-        } catch (error) {
-            res.status(404).json({
-                status: 'error',
-                message: error.message
-            });
-        }
-    }
-);
+app.engine('handlebars', handlebars.engine());
+app.set('views', __dirname + '/../views');
+app.set('view engine', 'handlebars');
 
-router.get('/stats/sales',
-    isAuthenticated,
-    authorize([ROLES.ADMIN]),
-    async (req, res) => {
-        try {
-            const { startDate, endDate } = req.query;
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+app.use(cookieParser(config.cookies.secret));
 
-            const stats = await purchaseService.getSalesStatistics(
-                startDate,
-                endDate
-            );
+initializePassport();
+app.use(passport.initialize());
 
-            res.json({
-                status: 'success',
-                statistics: stats,
-                period: {
-                    startDate: startDate || 'Desde el inicio',
-                    endDate: endDate || 'Hasta ahora'
-                }
-            });
-        } catch (error) {
-            res.status(500).json({
-                status: 'error',
-                message: error.message
-            });
-        }
-    }
-);
+app.use('/api/sessions', sessionsRouter);
+app.use('/api/products', productRouter);
+app.use('/api/carts', cartRouter);
+app.use('/api/tickets', ticketRouter);
+app.use('/', viewsRouter);
 
-export default router;
+const PORT = config.server.port;
+const httpServer = app.listen(PORT, () => {
+    console.log(`🚀 Servidor escuchando en el puerto ${PORT}`);
+    console.log(`🌍 Ambiente: ${config.server.env}`);
+});
+
+const io = new Server(httpServer);
+websocket(io);
