@@ -63,4 +63,85 @@ router.post('/logout', (req, res) => {
     });
 });
 
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El email es requerido'
+            });
+        }
+
+        const result = await authService.requestPasswordReset(email);
+
+        res.json({
+            status: 'success',
+            ...result
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message
+        });
+    }
+});
+
+router.get('/verify-reset-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        const result = await authService.verifyResetToken(token);
+
+        if (!result.valid) {
+            return res.status(400).json({
+                status: 'error',
+                message: result.message
+            });
+        }
+
+        res.json({
+            status: 'success',
+            ...result
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message
+        });
+    }
+});
+
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Token y nueva contraseña son requeridos'
+            });
+        }
+
+        if (newPassword.length < 4) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'La contraseña debe tener al menos 4 caracteres'
+            });
+        }
+
+        const result = await authService.resetPassword(token, newPassword);
+
+        res.json({
+            status: 'success',
+            ...result
+        });
+    } catch (error) {
+        res.status(400).json({
+            status: 'error',
+            message: error.message
+        });
+    }
+});
+
 export default router;
