@@ -17,7 +17,7 @@ import initializePassport from './config/passportConfig.js';
 import productRouter from './routes/productRouter.js';
 import cartRouter from './routes/cartRouter.js';
 import viewsRouter from './routes/viewsRouter.js';
-import sessionsRouter from './routes/sessionsRouter.js';
+import sessionRouter from './routes/sessionRouter.js';
 import ticketRouter from './routes/ticketRouter.js';
 
 const app = express();
@@ -38,7 +38,7 @@ app.use(cookieParser(config.cookies.secret));
 initializePassport();
 app.use(passport.initialize());
 
-app.use('/api/sessions', sessionsRouter);
+app.use('/api/sessions', sessionRouter);
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
 app.use('/api/tickets', ticketRouter);

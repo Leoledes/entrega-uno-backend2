@@ -4,3 +4,5 @@
 products.json
 carts.json
 .env
+.DS_Store
+*.log
