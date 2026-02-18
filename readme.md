@@ -112,11 +112,11 @@ npm install
 
 ### 3. Configurar variables de entorno
 
-Crear archivo `.env` en la raíz del proyecto basándose en `.env.example`:
+Crear archivo `.env` en la raíz del proyecto basándose en `.env.profesor`:
 
 ```bash
 # Copiar el template
-cp .env.example .env
+cp .env.profesor .env
 ```
 
 Luego editar `.env` con tus valores reales:
@@ -129,7 +129,7 @@ EMAIL_USER=tu-email@gmail.com
 EMAIL_PASSWORD=tu-app-password-real
 ```
 
-**Ver `.env.example` para la lista completa de variables.**
+**Ver `.env.profesor` para la lista completa de variables.**
 
 ⚠️ **IMPORTANTE:** Nunca subir el archivo `.env` a GitHub (ya está en `.gitignore`).
 
