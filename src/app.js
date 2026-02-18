@@ -1,7 +1,3 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 import express from 'express';
 import handlebars from 'express-handlebars';
 import { Server } from 'socket.io';
@@ -23,8 +19,8 @@ import ticketRouter from './routes/ticketRouter.js';
 const app = express();
 
 mongoose.connect(config.mongodb.uri)
-    .then(() => console.log("✅ Conectado con éxito a MongoDB Atlas"))
-    .catch(error => console.error("❌ Error al conectar a la base de datos:", error));
+    .then(() => console.log('✅ Conectado con éxito a MongoDB Atlas'))
+    .catch(error => console.error('❌ Error al conectar a la base de datos:', error));
 
 app.engine('handlebars', handlebars.engine());
 app.set('views', __dirname + '/../views');
